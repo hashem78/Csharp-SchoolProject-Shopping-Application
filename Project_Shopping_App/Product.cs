@@ -68,8 +68,7 @@ namespace shoppingApp
         static ProductList()
         {
             if(File.Exists("pickled_store_products.dat"))
-            {                Console.WriteLine("HEre");
-
+            {
                 FileStream fs = new FileStream("pickled_store_products.dat", FileMode.Open, FileAccess.Read);
                 BinaryFormatter bf = new BinaryFormatter();
                 StoreProducts = (HashSet<Product>)bf.Deserialize(fs);
