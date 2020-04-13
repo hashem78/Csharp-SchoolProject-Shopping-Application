@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -63,20 +64,21 @@ namespace shoppingApp
     [Serializable]
     class ProductList
     {
-        private static HashSet<Product> StoreProducts;
+        public static Hashtable StoreProducts;
+        //public static HashSet<Product> StoreProducts;
         private HashSet<Product> Products;
         static ProductList()
         {
-            if(File.Exists("pickled_store_products.dat"))
+            if(File.Exists(@"data\pickled_store_products.dat"))
             {
-                FileStream fs = new FileStream("pickled_store_products.dat", FileMode.Open, FileAccess.Read);
+                FileStream fs = new FileStream(@"data\pickled_store_products.dat", FileMode.Open, FileAccess.Read);
                 BinaryFormatter bf = new BinaryFormatter();
-                StoreProducts = (HashSet<Product>)bf.Deserialize(fs);
+                StoreProducts = (Hashtable)bf.Deserialize(fs);
                 fs.Close();
             }
             else
             {
-                StoreProducts = new HashSet<Product>();
+                StoreProducts = new Hashtable();
             }
 
         }
@@ -86,17 +88,16 @@ namespace shoppingApp
         }
         public static void AddStoreProduct(Product P)
         {
-            StoreProducts.Add(P);
+            StoreProducts.Add(StoreProducts.Count+1,P);
+            SaveProductList();
         }
-        public static void DeleteStoreProduct(Product P)
+        public static void DeleteStoreProduct(int k)
         {
-            if (StoreProducts.Contains(P))
-                StoreProducts.Remove(P);
-        }
-        public static IReadOnlyList<Product> GetStoreList()
-        {
-            IReadOnlyList<Product> l = StoreProducts.ToList();
-            return l;
+            if (StoreProducts.ContainsKey(k))
+                StoreProducts.Remove(k);
+            else
+                throw new ArgumentNullException();
+            SaveProductList();
         }
         public void AddProduct(Product P)
         {
@@ -112,12 +113,16 @@ namespace shoppingApp
             IReadOnlyList<Product> l = Products.ToList();
             return l;
         }
-        ~ProductList()
+        private static void SaveProductList()
         {
             BinaryFormatter bf = new BinaryFormatter();
-            FileStream fs = new FileStream("pickled_store_products.dat", FileMode.Create, FileAccess.Write);
+            FileStream fs = new FileStream(@"data\pickled_store_products.dat", FileMode.Create, FileAccess.Write);
             bf.Serialize(fs, StoreProducts);
             fs.Close();
+        }
+        ~ProductList()
+        {
+            SaveProductList();
         }
     }
 }

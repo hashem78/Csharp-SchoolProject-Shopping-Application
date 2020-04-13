@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Collections;
 
 namespace shoppingApp
 {
@@ -90,8 +91,8 @@ namespace shoppingApp
             Console.Clear();
             string space = "            ";
             Console.WriteLine("ID" + space + "Name" + space + "Category" + space + "Price" + space + "Quantity");
-            foreach (Product product in ProductList.GetStoreList())
-                product.Print();
+            foreach (Product p in ProductList.StoreProducts.Values)
+                p.Print();
             Console.WriteLine();
         }
         protected int isChoiceCorrect(string choice)
@@ -136,7 +137,7 @@ namespace shoppingApp
         {
             string space = "            ";
             Console.WriteLine("ID" + space + "Name" + space + "Category" + space + "Price" + space + "Quantity");
-            foreach (Product product in ProductList.GetStoreList())
+            foreach (Product product in ProductList.StoreProducts.Values)
             {
                 if (product.ProductQuantity >= threshold)
                     product.Print();
@@ -181,6 +182,52 @@ namespace shoppingApp
             }
 
         }
+        private void AddProductToStore()
+        {
+            Console.Clear();
+            string id, name, category;
+            double price, quantity;
+
+            Console.Write("Please enter product ID: ");
+            id = Console.ReadLine();
+
+            Console.Write("Please enter product name: ");
+            name = Console.ReadLine();
+
+            Console.Write("Please enter product category: ");
+            category = Console.ReadLine();
+
+            Console.Write("Please enter product price: ");
+            price = Convert.ToDouble(Console.ReadLine());
+
+            Console.Write("Please enter product quantity: ");
+            quantity = Convert.ToDouble(Console.ReadLine());
+
+            AddProduct(new Product(id, name, category, price, quantity));
+
+
+        }
+        private void DeleteProductFromStore()
+        {
+            Console.Clear();
+            int idx = 1;
+            foreach (Product p in ProductList.StoreProducts.Values)
+            {
+                Console.WriteLine(idx + ". #" + p.ProductId + " " + p.ProductName);
+                idx++;
+            }
+            Console.Write("Enter choice: ");
+            try
+            {
+                int uchoice = Convert.ToInt32(Console.ReadLine());
+                ProductList.DeleteStoreProduct(uchoice);
+            }catch
+            {
+                Console.WriteLine("Wrong choice!");
+                Console.WriteLine("Press any key to continue!");
+                Console.ReadKey();
+            }
+        }
         public override void HandleChoice(string choice)
         {
             int c = isChoiceCorrect(choice);
@@ -195,8 +242,10 @@ namespace shoppingApp
                     DeleteCustomer();
                     break;
                 case 3:
+                    AddProductToStore();
                     break;
                 case 4:
+                    DeleteProductFromStore();
                     break;
                 case 5:
                     break;
@@ -211,6 +260,18 @@ namespace shoppingApp
     [Serializable]
     class Customer : User
     {
+        private string _address;
+        public string Address
+        {
+            set
+            {
+                _address = value;
+            }
+            get
+            {
+                return _address;
+            }
+        }
         ProductList Basket = new ProductList();
         public Customer(string Name, string Password) : base(Name, Password)
         {
