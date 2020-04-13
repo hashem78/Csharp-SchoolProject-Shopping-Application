@@ -60,7 +60,7 @@ namespace shoppingApp
         {
 
         }
-        public virtual void ViewProducts(double threshold)
+        public virtual void ViewStoreProducts(double threshold)
         {
 
         }
@@ -86,12 +86,12 @@ namespace shoppingApp
             fs.Close();
         }
 
-        public void ViewStoreProductList()
+        public virtual void ViewList()
         {
             Console.Clear();
             string space = "            ";
             Console.WriteLine("ID" + space + "Name" + space + "Category" + space + "Price" + space + "Quantity");
-            foreach (Product p in ProductList.StoreProducts.Values)
+            foreach (Product p in StoreList.List.Values)
                 p.Print();
             Console.WriteLine();
         }
@@ -131,13 +131,13 @@ namespace shoppingApp
         }
         public override void AddProduct(Product product)
         {
-            ProductList.AddStoreProduct(product);
+            StoreList.AddProduct(product);
         }
-        public override void ViewProducts(double threshold)
+        public override void ViewStoreProducts(double threshold)
         {
             string space = "            ";
             Console.WriteLine("ID" + space + "Name" + space + "Category" + space + "Price" + space + "Quantity");
-            foreach (Product product in ProductList.StoreProducts.Values)
+            foreach (Product product in StoreList.List.Values)
             {
                 if (product.ProductQuantity >= threshold)
                     product.Print();
@@ -210,17 +210,13 @@ namespace shoppingApp
         private void DeleteProductFromStore()
         {
             Console.Clear();
-            int idx = 1;
-            foreach (Product p in ProductList.StoreProducts.Values)
-            {
-                Console.WriteLine(idx + ". #" + p.ProductId + " " + p.ProductName);
-                idx++;
-            }
-            Console.Write("Enter choice: ");
+            foreach (Product p in StoreList.List.Values)
+                p.Print();
+            Console.Write("Enter ID of product to remove: ");
             try
             {
-                int uchoice = Convert.ToInt32(Console.ReadLine());
-                ProductList.DeleteStoreProduct(uchoice);
+                string uchoice = Console.ReadLine();
+                StoreList.DeleteProduct(uchoice);
             }catch
             {
                 Console.WriteLine("Wrong choice!");
@@ -272,7 +268,7 @@ namespace shoppingApp
                 return _address;
             }
         }
-        ProductList Basket = new ProductList();
+        Basket Basket = new Basket();
         public Customer(string Name, string Password) : base(Name, Password)
         {
             Functions = new string[]
@@ -288,16 +284,21 @@ namespace shoppingApp
         {
             Basket.AddProduct(product);
         }
-        public override void ViewProducts(double threshold = 0)
+        public override void ViewList()
+        {
+            string space = "            ";
+            Console.WriteLine("ID" + space + "Name" + space + "Category" + space + "Price" + space + "Quantity");
+            foreach (Product p in Basket.List.Values)
+                p.Print();
+        }
+        public override void ViewStoreProducts(double threshold = 0)
         {
             if (threshold == 0)
             {
                 string space = "            ";
                 Console.WriteLine("ID" + space + "Name" + space + "Category" + space + "Price" + space + "Quantity");
-                foreach (Product product in Basket.GetList())
-                {
+                foreach (Product product in Basket.List.Values)
                     product.Print();
-                }
             }
         }
         public override void HandleChoice(string choice)
@@ -317,6 +318,7 @@ namespace shoppingApp
                     break;
             }
         }
+
 
     }
 

@@ -62,67 +62,96 @@ namespace shoppingApp
         }
     }
     [Serializable]
-    class ProductList
+    abstract class StoreList
     {
-        public static Hashtable StoreProducts;
-        //public static HashSet<Product> StoreProducts;
-        private HashSet<Product> Products;
-        static ProductList()
-        {
-            if(File.Exists(@"data\pickled_store_products.dat"))
-            {
-                FileStream fs = new FileStream(@"data\pickled_store_products.dat", FileMode.Open, FileAccess.Read);
-                BinaryFormatter bf = new BinaryFormatter();
-                StoreProducts = (Hashtable)bf.Deserialize(fs);
-                fs.Close();
-            }
-            else
-            {
-                StoreProducts = new Hashtable();
-            }
+        private static Hashtable _list;
+        private static string _name = "store_list";
 
-        }
-        public ProductList()
+        public static string Name
         {
-            Products = new HashSet<Product>();
+            get
+            {
+                return _name;
+            }
         }
-        public static void AddStoreProduct(Product P)
+        public static Hashtable List
         {
-            StoreProducts.Add(StoreProducts.Count+1,P);
-            SaveProductList();
+            get
+            {
+                return _list;
+            }
         }
-        public static void DeleteStoreProduct(int k)
+        static StoreList()
         {
-            if (StoreProducts.ContainsKey(k))
-                StoreProducts.Remove(k);
+            if (File.Exists(@"data\" + Name + ".dat"))
+            {
+                BinaryFormatter bf = new BinaryFormatter();
+                FileStream fs = new FileStream(@"data\" + Name + ".dat", FileMode.Open, FileAccess.Read);
+                _list = (Hashtable)bf.Deserialize(fs);
+                fs.Close();
+            }else
+            {
+                _list = new Hashtable();
+            }
+        }
+        public static void AddProduct(Product P)
+        {
+            _list.Add(P.ProductId, P);
+            SaveStoreList();
+        }
+        public static void DeleteProduct(string id)
+        {
+            if (_list.ContainsKey(id))
+            {
+                _list.Remove(id);
+                SaveStoreList();
+            }
             else
+            {
                 throw new ArgumentNullException();
-            SaveProductList();
+            }
+        }
+        public static void SaveStoreList()
+        {
+            BinaryFormatter bf = new BinaryFormatter();
+            FileStream fs = new FileStream(@"data\" + Name + ".dat", FileMode.Create, FileAccess.Write);
+            bf.Serialize(fs, _list);
+            fs.Close();
+        }
+    }
+    [Serializable]
+    class Basket
+    {
+        private Hashtable _list;
+
+        public Hashtable List
+        {
+            get
+            {
+                return _list;
+            }
+        }
+       public Basket()
+        {
+            _list = new Hashtable();
         }
         public void AddProduct(Product P)
         {
-            Products.Add(P);
+            _list.Add(P.ProductId, P);
         }
-        public void DeleteProduct(Product P)
+        public void DeleteProduct(string id)
         {
-            if (Products.Contains(P))
-                Products.Remove(P);
+            if (_list.ContainsKey(id))
+                _list.Remove(id);
+            else
+                throw new ArgumentNullException();
         }
-        public IReadOnlyList<Product> GetList()
+        public Product GetProduct(string id)
         {
-            IReadOnlyList<Product> l = Products.ToList();
-            return l;
-        }
-        private static void SaveProductList()
-        {
-            BinaryFormatter bf = new BinaryFormatter();
-            FileStream fs = new FileStream(@"data\pickled_store_products.dat", FileMode.Create, FileAccess.Write);
-            bf.Serialize(fs, StoreProducts);
-            fs.Close();
-        }
-        ~ProductList()
-        {
-            SaveProductList();
+            if (_list.ContainsKey(id))
+                return (Product)_list[id];
+            return null;
         }
     }
+
 }

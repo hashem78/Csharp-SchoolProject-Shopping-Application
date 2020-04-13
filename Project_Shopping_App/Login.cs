@@ -11,7 +11,7 @@ namespace shoppingApp
     {
         public static bool CheckUser(User usr)
         {
-            if (File.Exists("data\\users\\" + usr.Name + ".dat"))
+            if (File.Exists(@"data\users\" + usr.Name + ".dat"))
                 return true;
             return false;
         }
@@ -19,7 +19,7 @@ namespace shoppingApp
         {
             if (CheckUser(usr))
             {
-                FileStream fs = new FileStream("data\\users\\" + usr.Name + ".dat", FileMode.Open, FileAccess.Read);
+                FileStream fs = new FileStream(@"data\users\" + usr.Name + ".dat", FileMode.Open, FileAccess.Read);
                 BinaryFormatter bf = new BinaryFormatter();
                 Admin tempa = bf.Deserialize(fs) as Admin;
                 fs.Seek(0, SeekOrigin.Begin);

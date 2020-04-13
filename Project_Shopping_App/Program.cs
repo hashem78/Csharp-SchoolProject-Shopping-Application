@@ -18,7 +18,7 @@ namespace shoppingApp
             bool flag = true;
             while (flag)
             {
-                usr.ViewStoreProductList();
+                usr.ViewList();
                 usr.PrintUserFunctions();
                 Console.Write("Please enter your choice(-1 to exit): ");
                 string uchoice = Console.ReadLine();
