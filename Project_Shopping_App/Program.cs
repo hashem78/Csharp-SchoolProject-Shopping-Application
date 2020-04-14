@@ -33,7 +33,7 @@ namespace shoppingApp
             string uname = Console.ReadLine();
             Console.Write("Enter password: ");
             string upass = Console.ReadLine();
-            var userC = Login.LoadUser(new User(uname, upass));
+            var userC = Login.LoadUser(uname, upass);
             if (userC.a != null)
             {
                 Admin adm = userC.a;

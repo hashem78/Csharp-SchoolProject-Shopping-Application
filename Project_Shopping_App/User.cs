@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Collections;
+using System.Globalization;
 
 namespace shoppingApp
 {
@@ -156,9 +157,9 @@ namespace shoppingApp
         {
             string[] dir = Directory.GetFiles(@"data\users\", "*.dat");
             int idx = 1;
+
             while (true)
             {
-                Console.Clear();
                 foreach (string file in dir)
                 {
                     int a = file.LastIndexOf('\\') + 1;
@@ -181,6 +182,19 @@ namespace shoppingApp
 
             }
 
+        }
+        public void ViewAllUsers()
+        {
+            Console.Clear();
+            string[] dir = Directory.GetFiles(@"data\users\", "*.dat");
+            int idx = 1;
+            foreach (string file in dir)
+            {
+                int a = file.LastIndexOf('\\') + 1;
+                string ans = idx + "." + file.Substring(a, file.IndexOf('.') - a);
+                idx++;
+                Console.WriteLine(ans);
+            }
         }
         private void AddProductToStore()
         {
@@ -217,7 +231,8 @@ namespace shoppingApp
             {
                 string uchoice = Console.ReadLine();
                 StoreList.DeleteProduct(uchoice);
-            }catch
+            }
+            catch
             {
                 Console.WriteLine("Wrong choice!");
                 Console.WriteLine("Press any key to continue!");
@@ -246,10 +261,106 @@ namespace shoppingApp
                 case 5:
                     break;
                 case 6:
+                    ViewAllUsers();
                     break;
                 case 7:
+                    try
+                    {
+                        Console.Clear();
+                        Console.Write("Enter threshold: ");
+                        double threshold = Convert.ToDouble(Console.ReadLine());
+                        ViewStoreProducts(threshold);
+                    }
+                    catch
+                    {
+                        Console.WriteLine("Wrong value entered!");
+                    }
+                    break;
+                case 8:
+                    ViewAllOrdersForCustomer();
+                    break;
+                case 9:
+                    ViewAllOrdersBetweenDates();
                     break;
             }
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+        }
+        private void ViewAllOrdersBetweenDates()
+        {
+            Console.Clear();
+            Console.Write("Enter starting date (dd/mm/yy): ");
+            string starting = Console.ReadLine();
+            Console.Write("Enter ending date (dd/mm/yy): ");
+            string ending = Console.ReadLine();
+
+            if (starting[starting.IndexOf("/") + 1] != '0')
+                starting = starting.Insert(starting.IndexOf("/") + 1, "0");
+            if (ending[ending.IndexOf("/") + 1] != '0')
+                ending = ending.Insert(ending.IndexOf("/") + 1, "0");
+
+            DateTime startingDate;//= DateTime.ParseExact(starting, "dd/MM/yyyy",null);
+            DateTime endingDate;// = DateTime.ParseExact(ending, "dd/MM/yyyy",null);
+            
+            if (!DateTime.TryParseExact(starting, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out startingDate))
+            {
+                Console.WriteLine("Wrong starting date value entered!");
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+                return;
+            }
+            if (!DateTime.TryParseExact(ending, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out endingDate))
+            {
+                Console.WriteLine("Wrong ending date value entered!");
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+                return;
+            }
+           
+
+            string[] users = Directory.GetFiles(@"data\users\", "*.dat");
+            Console.WriteLine("Order            From                 Date");
+            foreach (string s in users)
+            {               
+                Customer c = Login.LoadCustomer(s) as Customer;
+                if (c != null)
+                {   
+                    foreach (Product p in c.Basket.List.Values)
+                    {
+                        if (DateTime.Compare(startingDate,p.TimeOfPurchase) <= 0)
+                        {
+                            Console.WriteLine(startingDate);
+                            if(DateTime.Compare(endingDate, p.TimeOfPurchase) >= 0)
+                            {
+                                p.Print();
+                            }
+                        }
+                    }
+                }
+
+                //fs.Close();
+            }
+        }
+        private void ViewAllOrdersForCustomer()
+        {
+            ViewAllUsers();
+            Console.Write("Enter customer name: ");
+            string name = Console.ReadLine();
+            BinaryFormatter bf = new BinaryFormatter();
+            Customer temp;
+            try
+            {
+                FileStream fs = new FileStream(@"data\users\" + name + ".dat", FileMode.Open, FileAccess.Read);
+                temp = (Customer)bf.Deserialize(fs);
+                temp.ViewList();
+                fs.Close();
+            }
+            catch
+            {
+                Console.WriteLine("Wrong value entered!");
+            }
+            Console.ReadKey();
+            Console.WriteLine("Press any key to continue...");
         }
 
     }
@@ -257,6 +368,7 @@ namespace shoppingApp
     class Customer : User
     {
         private string _address;
+        public Basket Basket = new Basket();
         public string Address
         {
             set
@@ -268,7 +380,7 @@ namespace shoppingApp
                 return _address;
             }
         }
-        Basket Basket = new Basket();
+
         public Customer(string Name, string Password) : base(Name, Password)
         {
             Functions = new string[]
@@ -297,7 +409,7 @@ namespace shoppingApp
             {
                 string space = "            ";
                 Console.WriteLine("ID" + space + "Name" + space + "Category" + space + "Price" + space + "Quantity");
-                foreach (Product product in Basket.List.Values)
+                foreach (Product product in StoreList.List.Values)
                     product.Print();
             }
         }
@@ -313,6 +425,8 @@ namespace shoppingApp
                 case 2:
                     break;
                 case 3:
+                    Basket.AddProduct(new Product("#123", "profanity", "shit", 69, 69));
+                    SaveUser();
                     break;
                 case 4:
                     break;

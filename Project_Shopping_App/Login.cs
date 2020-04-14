@@ -9,34 +9,49 @@ namespace shoppingApp
 {
     class Login
     {
-        public static bool CheckUser(User usr)
+        public static bool CheckUserExists(string usr)
         {
-            if (File.Exists(@"data\users\" + usr.Name + ".dat"))
+            if (File.Exists(@"data\users\" + usr + ".dat"))
                 return true;
             return false;
         }
-        public static (Admin a, Customer c) LoadUser(User usr)
+        public static (Admin a, Customer c) LoadUser(string username,string password)
         {
-            if (CheckUser(usr))
+            if (CheckUserExists(username))
             {
-                FileStream fs = new FileStream(@"data\users\" + usr.Name + ".dat", FileMode.Open, FileAccess.Read);
+                FileStream fs = new FileStream(@"data\users\" + username + ".dat", FileMode.Open, FileAccess.Read);
                 BinaryFormatter bf = new BinaryFormatter();
                 Admin tempa = bf.Deserialize(fs) as Admin;
                 fs.Seek(0, SeekOrigin.Begin);
-                Customer tempb = bf.Deserialize(fs) as Customer;
+                Customer tempc = bf.Deserialize(fs) as Customer;
                 fs.Close();
                 if (tempa != null)
-                {
-                    if (tempa.Password == usr.Password)
-                        return (tempa, null);
-                }
-                if (tempb != null)
-                {
-                    if (tempb.Password == usr.Password)
-                        return (null, tempb);
-                }
+                        if (tempa.Password == password)
+                            return (tempa, null);
+                if (tempc != null)
+                        if (tempc.Password == password)
+                            return (null, tempc);
             }
             return (null, null);
+        }
+        public static Customer LoadCustomer(string path)
+        {
+            try
+            {
+                FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read);
+                BinaryFormatter bf = new BinaryFormatter();
+                Admin tempa = bf.Deserialize(fs) as Admin;
+                fs.Seek(0, SeekOrigin.Begin);
+                Customer tempc = bf.Deserialize(fs) as Customer;
+                fs.Close();
+                if (tempc != null)
+                    return tempc;
+            }
+            catch
+            {
+                return null;
+            }
+            return null;
         }
     }
 }

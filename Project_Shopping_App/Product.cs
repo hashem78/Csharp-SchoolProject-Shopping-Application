@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Globalization;
+
 
 namespace shoppingApp
 {
@@ -17,6 +19,8 @@ namespace shoppingApp
         string _product_category;
         double _product_price;
         double _product_quantity;
+
+        public DateTime TimeOfPurchase;
 
         public string ProductId
         {
@@ -137,6 +141,7 @@ namespace shoppingApp
         }
         public void AddProduct(Product P)
         {
+            P.TimeOfPurchase = DateTime.ParseExact(DateTime.Now.ToString("dd/MM/yyyy"), "dd/MM/yyyy",null);
             _list.Add(P.ProductId, P);
         }
         public void DeleteProduct(string id)
