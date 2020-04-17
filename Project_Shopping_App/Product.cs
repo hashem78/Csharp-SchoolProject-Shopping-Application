@@ -69,7 +69,7 @@ namespace shoppingApp
         }
         public void Print()
         {
-            Console.WriteLine("{0,-20} {1,-20} {2,-20} {3,-20} {4,-20}", ProductId, ProductName, ProductCategory, ProductPrice, ProductQuantity);
+            Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", ProductId, ProductName, ProductCategory, ProductPrice, ProductQuantity);
         }
     }
     [Serializable]
@@ -108,7 +108,7 @@ namespace shoppingApp
         }
         public static void ViewStoreList(bool showZero = true)
         {
-            Console.WriteLine("{0,-20} {1,-20} {2,-20} {3,-20} {4,-20}", "ID", "Name", "Category", "Price", "Quantity");
+            Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
             foreach (Product p in _list.Values)
                 if (p.ProductQuantity == 0)
                 {
@@ -145,6 +145,8 @@ namespace shoppingApp
 
                         Console.Write("Enter product quantity: ");
                         uquantity = Convert.ToDouble(Console.ReadLine());
+                        if (uquantity < 0)
+                            throw new FormatException();
                         success = true;
                         break;
                     }
@@ -153,7 +155,7 @@ namespace shoppingApp
                         Console.WriteLine("Wrong value entered!");
                     }
                 }
-                Product p = new Product(id, name, category, price, quantity);
+                Product p = new Product(id, name, category, price, uquantity);
                 _list.Add(id, p);
             }else
             {
@@ -172,22 +174,23 @@ namespace shoppingApp
             bool success = false;
             if (_list.ContainsKey(id))                
             {
-                if (quantity == 0)
+                if (GetProduct(id).ProductQuantity >= quantity)
+                {
+                    GetProduct(id).ProductQuantity -= quantity;
+                    success = true;
+                }
+                if (GetProduct(id).ProductQuantity == 0)
                 {
                     _list.Remove(id);
-                    SaveStoreList();
                     success = true;
-                }else
-                {
-                    if (GetProduct(id).ProductQuantity > quantity)
-                    {
-                        GetProduct(id).ProductQuantity -= quantity;
-                        success = true;
-                    }
                 }
             }
+
             if (success)
+            {
+                SaveStoreList();
                 return true;
+            }
             return false;
         }
         public static Product GetProduct(string id)
@@ -268,7 +271,7 @@ namespace shoppingApp
         }
         public void ViewBasket()
         {
-            Console.WriteLine("{0,-20} {1,-20} {2,-20} {3,-20} {4,-20}", "ID", "Name", "Category", "Price", "Quantity");
+            Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
             foreach (Product p in _list.Values)
                 p.Print();
         }

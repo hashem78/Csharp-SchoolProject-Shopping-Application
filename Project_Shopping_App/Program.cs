@@ -25,6 +25,9 @@ namespace shoppingApp
         }
         static void Main(string[] args)
         {
+            Console.WriteLine("Welcome to the best shopping app on the planet!");
+            Console.WriteLine();
+            Console.WriteLine();
             Console.Write("Enter username: ");
             string uname = Console.ReadLine();
             Console.Write("Enter password: ");
@@ -39,6 +42,9 @@ namespace shoppingApp
             {
                 Customer customer = userC.c;
                 Menu(customer);
+            }else if (userC.a == null && userC.c == null)
+            {
+                Console.WriteLine("Login failed... Password or username incorrect!");
             }
         }
     }

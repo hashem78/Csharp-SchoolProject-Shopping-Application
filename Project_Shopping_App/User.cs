@@ -15,7 +15,7 @@ namespace shoppingApp
     {
         private string _name;
         private string _password;
-        
+
 
         public string Name
         {
@@ -62,7 +62,7 @@ namespace shoppingApp
         }
 
         public virtual void AddProduct()
-        { 
+        {
 
         }
 
@@ -78,7 +78,7 @@ namespace shoppingApp
                 return _functions;
             }
         }
-        
+
         protected int isChoiceCorrect(string choice)
         {
             try
@@ -105,7 +105,7 @@ namespace shoppingApp
         }
         public virtual void ViewList()
         {
-            Console.WriteLine("{0,-20} {1,-20} {2,-20} {3,-20} {4,-20}", "ID", "Name", "Category", "Price", "Quantity");
+            Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
             foreach (Product p in StoreList.List.Values)
                 p.Print();
         }
@@ -130,7 +130,7 @@ namespace shoppingApp
         }
         public override void ViewStoreProducts(double threshold)
         {
-            Console.WriteLine("{0,-20} {1,-20} {2,-20} {3,-20} {2,-20}", "ID", "Name", "Category", "Price", "Quantity");
+            Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
             foreach (Product p in StoreList.List.Values)
             {
                 if (p.ProductQuantity >= threshold)
@@ -200,17 +200,32 @@ namespace shoppingApp
         private void DeleteProductFromStore()
         {
             Console.Clear();
+            Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
             foreach (Product p in StoreList.List.Values)
                 p.Print();
             Console.Write("Enter ID of product to remove: ");
             string uchoice = Console.ReadLine();
-            if (!StoreList.DeleteProduct(uchoice))
+            double quan = 0;
+            if (StoreList.GetProduct(uchoice).ProductQuantity != 0)
+            {
+                Console.Write("Enter quantity: ");
+                try
+                {
+                    quan = Convert.ToDouble(Console.ReadLine());
+                }
+                catch (FormatException)
+                {
+                    Console.WriteLine("Wrong value entered!");
+                    return;
+                }
+            }
+            if (!StoreList.DeleteProduct(uchoice, quan))
             {
                 Console.WriteLine("Wrong choice!");
-                Console.WriteLine("Press any key to continue!");
-                Console.ReadKey();
             }
         }
+
+
         public override void HandleChoice(string choice)
         {
             int c = isChoiceCorrect(choice);
@@ -314,7 +329,7 @@ namespace shoppingApp
                 temp.ViewList();
                 fs.Close();
             }
-            catch(InvalidCastException)
+            catch (InvalidCastException)
             {
                 Console.WriteLine("Wrong value entered!");
             }
@@ -326,7 +341,7 @@ namespace shoppingApp
     [Serializable]
     class Customer : User
     {
-        private double _balance;
+        private double _balance = 0;
         private string _address;
         public Basket Basket = new Basket();
         public string Address
@@ -378,7 +393,7 @@ namespace shoppingApp
                 if (temp.ProductQuantity - uquan >= 0)
                 {
                     temp.ProductQuantity = uquan;
-                    Basket.Add(temp,uquan);
+                    Basket.Add(temp, uquan);
                     SaveUser();
                 }
                 else
@@ -386,11 +401,11 @@ namespace shoppingApp
                     Console.WriteLine("Desired quantity is unavailable!");
                 }
             }
-            catch(NullReferenceException)
+            catch (NullReferenceException)
             {
                 Console.WriteLine("Product doesn\'t exist!");
             }
-            catch(FormatException)
+            catch (FormatException)
             {
                 Console.WriteLine("Wrong value entered!");
             }
@@ -398,6 +413,7 @@ namespace shoppingApp
         public override void ViewList()
         {
             Basket.ViewBasket();
+            Console.WriteLine("Current balance is: {0}", _balance);
         }
         public override void ViewStoreProducts(double threshold = 0)
         {
@@ -406,27 +422,28 @@ namespace shoppingApp
         }
         public void Search()
         {
-            Dictionary<int,string> categories = new Dictionary<int, string>();
+            Dictionary<int, string> categories = new Dictionary<int, string>();
             int idx = 1;
             foreach (Product p in StoreList.List.Values)
                 if (!categories.ContainsValue(p.ProductCategory))
                     categories.Add(idx++, p.ProductCategory);
-            foreach (KeyValuePair<int,string> d in categories)
-                Console.WriteLine(d.Key +". " + d.Value);
+            foreach (KeyValuePair<int, string> d in categories)
+                Console.WriteLine(d.Key + ". " + d.Value);
 
-            Console.Write("Enter your choice(1-{0}): ",idx-1);
+            Console.Write("Enter your choice(1-{0}): ", idx - 1);
 
             try
             {
                 int choice = Convert.ToInt32(Console.ReadLine());
-                Console.WriteLine("{0,-20} {1,-20} {2,-20} {3,-20} {4,-20}", "ID", "Name", "Category", "Price", "Quantity");
+                Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
                 foreach (Product p in StoreList.List.Values)
-                    if(p.ProductCategory == categories[choice])
+                    if (p.ProductCategory == categories[choice])
                     {
                         p.Print();
                     }
 
-            }catch(FormatException)
+            }
+            catch (FormatException)
             {
                 Console.WriteLine("Wrong value entered!");
             }
@@ -467,7 +484,8 @@ namespace shoppingApp
                                 }
                             }
                             else throw new FormatException(); // id may be not in basket
-                        }catch(FormatException)
+                        }
+                        catch (FormatException)
                         {
                             Console.WriteLine("Wrong value entered!");
                             Console.Write("Press any key to continue...");
@@ -479,26 +497,68 @@ namespace shoppingApp
                         Console.Write("Press any key to continue...");
                         success = false;
                         break;
-                    }else
+                    }
+                    else
                     {
                         Console.WriteLine("Wrong value entered!");
                         Console.Write("Press any key to continue...");
                         Console.ReadKey();
                     }
-                }else
+                }
+                else
                 {
                     success = true;
                     break;
                 }
-            } 
+            }
             SaveUser();
             if (success)
             {
-                _balance -= cost;
-                Basket.List.Clear();
+                while (true)
+                {
+                    Console.Write("Total cost is {0} and your balance is {1}, would you like to procceed with the transaction?(Y/N): ", cost, _balance);
+                    string uchoice = Console.ReadLine().ToUpper();
+                    if (uchoice == "Y")
+                    {
+                        _balance -= cost;
+                        Basket.List.Clear();
+                        Console.WriteLine("Deducted {0}, new balance is {1}.", cost, _balance);
+                        SaveUser();
+                        break;
+                    }
+                    else if (uchoice == "N")
+                    {
+                        Console.WriteLine("Transaction cancelled.");
+                        break;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Wrong value entered!");
+                    }
+                }
                 return true;
             }
             return false;
+        }
+
+        private void AddBalance()
+        {
+            try
+            {
+                Console.WriteLine("Current balance is: {0}", _balance);
+                Console.Write("Enter amount to deposit: ");
+                double amount = Convert.ToDouble(Console.ReadLine());
+                if (amount < 0)
+                    throw new FormatException();
+                Console.WriteLine("Successfully deposited {0} to your account.", amount);
+                _balance += amount;
+                Console.WriteLine("New balance is: {0}", _balance);
+                SaveUser();
+            }
+            catch (FormatException)
+            {
+                Console.Write("Wrong value entered!");
+            }
         }
 
         public override void HandleChoice(string choice)
@@ -519,6 +579,9 @@ namespace shoppingApp
                     break;
                 case 4:
                     Pay();
+                    break;
+                case 5:
+                    AddBalance();
                     break;
             }
             Console.WriteLine("Press any key to continue...");
