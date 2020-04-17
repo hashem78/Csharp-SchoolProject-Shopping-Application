@@ -7,11 +7,11 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 namespace shoppingApp
 {
-    class Login
+    sealed class Login
     {
-        public static bool CheckUserExists(string usr)
+        public static bool CheckUserExists(string username)
         {
-            if (File.Exists(@"data\users\" + usr + ".dat"))
+            if (File.Exists(@"data\users\" + username + ".dat"))
                 return true;
             return false;
         }

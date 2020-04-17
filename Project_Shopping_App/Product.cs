@@ -73,7 +73,7 @@ namespace shoppingApp
         }
     }
     [Serializable]
-    abstract class StoreList
+    sealed class StoreList
     {
         private static Hashtable _list;
         private static string _name = "store_list";
@@ -124,11 +124,13 @@ namespace shoppingApp
         }
         public static bool AddProduct(string id,double quantity=0)
         {
+            if (quantity < 0)
+                return false;
             bool success = false;
-            if (!_list.ContainsKey(id))
+            if (GetProduct(id) == null)
             {
                 string  name, category;
-                double price, uquantity;
+                double price=0, uquantity;
 
                 Console.Write("Enter product name: ");
                 name = Console.ReadLine();
@@ -140,13 +142,21 @@ namespace shoppingApp
                 {
                     try
                     {
-                        Console.Write("Enter product price: ");
-                        price = Convert.ToDouble(Console.ReadLine());
-
+                        bool aprice = true;//ask for price?
+                        if (aprice)
+                        {
+                            Console.Write("Enter product price: ");
+                            price = Convert.ToDouble(Console.ReadLine());
+                            if (price < 0)
+                                throw new FormatException();
+                        }
                         Console.Write("Enter product quantity: ");
                         uquantity = Convert.ToDouble(Console.ReadLine());
                         if (uquantity < 0)
+                        {
+                            aprice = false;
                             throw new FormatException();
+                        }
                         success = true;
                         break;
                     }
@@ -171,8 +181,10 @@ namespace shoppingApp
         }
         public static bool DeleteProduct(string id,double quantity=0)
         {
+            if (quantity < 0)
+                return false;
             bool success = false;
-            if (_list.ContainsKey(id))                
+            if (GetProduct(id) != null)                
             {
                 if (GetProduct(id).ProductQuantity >= quantity)
                 {
@@ -181,7 +193,7 @@ namespace shoppingApp
                 }
                 if (GetProduct(id).ProductQuantity == 0)
                 {
-                    _list.Remove(id);
+                    DeleteProduct(id);
                     success = true;
                 }
             }
@@ -244,6 +256,8 @@ namespace shoppingApp
         }
         public bool DeleteProduct(string id,double quantity = 0)
         {
+            if (quantity < 0)
+                return false;
             if (_list.ContainsKey(id))
             {
                 if (quantity == 0)
@@ -253,10 +267,12 @@ namespace shoppingApp
                 }
                 else
                 {
-                    if (GetProduct(id).ProductQuantity - quantity != 0)
+                    if (GetProduct(id).ProductQuantity - quantity > 0)
                         GetProduct(id).ProductQuantity -= quantity;
-                    else
+                    else if (GetProduct(id).ProductQuantity - quantity == 0)
                         DeleteProduct(id);
+                    else
+                        return false;
                     return true;
                 }
             }
