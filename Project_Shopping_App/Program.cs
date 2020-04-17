@@ -8,16 +8,12 @@ namespace shoppingApp
 {
     class Program
     {
-        public static void AddProduct(User usr, Product P)
-        {
-            usr.AddProduct(P);
-        }
         public static void Menu(User usr)
         {
-            //View products in store
             bool flag = true;
             while (flag)
             {
+                Console.Clear();
                 usr.ViewList();
                 usr.PrintUserFunctions();
                 Console.Write("Please enter your choice(-1 to exit): ");

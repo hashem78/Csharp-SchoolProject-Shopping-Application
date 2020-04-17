@@ -41,6 +41,10 @@ namespace shoppingApp
         public double ProductQuantity
         {
             get { return _product_quantity; }
+            set
+            {
+                _product_quantity = value;
+            }
         }
 
         public Product(string id, string name, string category, double price, double quantity)
@@ -51,6 +55,11 @@ namespace shoppingApp
             _product_price = price;
             _product_quantity = quantity;
         }
+        public Product Clone()
+        {
+            Product temp = new Product(_product_id, _product_name, _product_category, _product_price, _product_quantity);
+            return temp;
+        }
         public override int GetHashCode()
         {
             int hash = 0;
@@ -60,9 +69,7 @@ namespace shoppingApp
         }
         public void Print()
         {
-            string space = "    ";
-            Console.WriteLine(ProductId + space + ProductName + space + ProductQuantity + space + ProductPrice + space + ProductQuantity);
-
+            Console.WriteLine("{0,-20} {1,-20} {2,-20} {3,-20} {4,-20}", ProductId, ProductName, ProductCategory, ProductPrice, ProductQuantity);
         }
     }
     [Serializable]
@@ -93,27 +100,101 @@ namespace shoppingApp
                 FileStream fs = new FileStream(@"data\" + Name + ".dat", FileMode.Open, FileAccess.Read);
                 _list = (Hashtable)bf.Deserialize(fs);
                 fs.Close();
-            }else
+            }
+            else
             {
                 _list = new Hashtable();
             }
         }
-        public static void AddProduct(Product P)
+        public static void ViewStoreList(bool showZero = true)
         {
-            _list.Add(P.ProductId, P);
-            SaveStoreList();
+            Console.WriteLine("{0,-20} {1,-20} {2,-20} {3,-20} {4,-20}", "ID", "Name", "Category", "Price", "Quantity");
+            foreach (Product p in _list.Values)
+                if (p.ProductQuantity == 0)
+                {
+                    if (showZero)
+                    {
+                        p.Print();
+                    }
+                }
+                else
+                {
+                    p.Print();
+                }
         }
-        public static void DeleteProduct(string id)
+        public static bool AddProduct(string id,double quantity=0)
+        {
+            bool success = false;
+            if (!_list.ContainsKey(id))
+            {
+                string  name, category;
+                double price, uquantity;
+
+                Console.Write("Enter product name: ");
+                name = Console.ReadLine();
+
+                Console.Write("Enter product category: ");
+                category = Console.ReadLine();
+
+                while (true)
+                {
+                    try
+                    {
+                        Console.Write("Enter product price: ");
+                        price = Convert.ToDouble(Console.ReadLine());
+
+                        Console.Write("Enter product quantity: ");
+                        uquantity = Convert.ToDouble(Console.ReadLine());
+                        success = true;
+                        break;
+                    }
+                    catch (FormatException)
+                    {
+                        Console.WriteLine("Wrong value entered!");
+                    }
+                }
+                Product p = new Product(id, name, category, price, quantity);
+                _list.Add(id, p);
+            }else
+            {
+                GetProduct(id).ProductQuantity += quantity;
+                success = true;
+            }
+            if (success)
+            {
+                SaveStoreList();
+                return true;
+            }
+            return false;
+        }
+        public static bool DeleteProduct(string id,double quantity=0)
+        {
+            bool success = false;
+            if (_list.ContainsKey(id))                
+            {
+                if (quantity == 0)
+                {
+                    _list.Remove(id);
+                    SaveStoreList();
+                    success = true;
+                }else
+                {
+                    if (GetProduct(id).ProductQuantity > quantity)
+                    {
+                        GetProduct(id).ProductQuantity -= quantity;
+                        success = true;
+                    }
+                }
+            }
+            if (success)
+                return true;
+            return false;
+        }
+        public static Product GetProduct(string id)
         {
             if (_list.ContainsKey(id))
-            {
-                _list.Remove(id);
-                SaveStoreList();
-            }
-            else
-            {
-                throw new ArgumentNullException();
-            }
+                return (Product)_list[id];
+            return null;
         }
         public static void SaveStoreList()
         {
@@ -135,27 +216,61 @@ namespace shoppingApp
                 return _list;
             }
         }
-       public Basket()
+        public Basket()
         {
             _list = new Hashtable();
         }
-        public void AddProduct(Product P)
+        public bool isEmpty()
         {
-            P.TimeOfPurchase = DateTime.ParseExact(DateTime.Now.ToString("dd/MM/yyyy"), "dd/MM/yyyy",null);
-            _list.Add(P.ProductId, P);
+            return _list.Count == 0;
         }
-        public void DeleteProduct(string id)
+        public void Add(Product P, double quantity=0)
+        {
+            P.TimeOfPurchase = DateTime.ParseExact(DateTime.Now.ToString("dd/MM/yyyy"), "dd/MM/yyyy", null);
+            try
+            {
+                _list.Add(P.ProductId, P);
+                StoreList.GetProduct(P.ProductId).ProductQuantity -= quantity;
+                StoreList.SaveStoreList();
+            }
+            catch (ArgumentException)
+            {
+                GetProduct(P.ProductId).ProductQuantity += quantity;
+            }
+
+        }
+        public bool DeleteProduct(string id,double quantity = 0)
         {
             if (_list.ContainsKey(id))
-                _list.Remove(id);
-            else
-                throw new ArgumentNullException();
+            {
+                if (quantity == 0)
+                {
+                    _list.Remove(id);
+                    return true;
+                }
+                else
+                {
+                    if (GetProduct(id).ProductQuantity - quantity != 0)
+                        GetProduct(id).ProductQuantity -= quantity;
+                    else
+                        DeleteProduct(id);
+                    return true;
+                }
+            }
+            return false;
         }
+
         public Product GetProduct(string id)
         {
             if (_list.ContainsKey(id))
                 return (Product)_list[id];
             return null;
+        }
+        public void ViewBasket()
+        {
+            Console.WriteLine("{0,-20} {1,-20} {2,-20} {3,-20} {4,-20}", "ID", "Name", "Category", "Price", "Quantity");
+            foreach (Product p in _list.Values)
+                p.Print();
         }
     }
 
