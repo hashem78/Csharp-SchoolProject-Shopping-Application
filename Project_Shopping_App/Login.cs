@@ -15,43 +15,32 @@ namespace shoppingApp
                 return true;
             return false;
         }
-        public static (Admin a, Customer c) LoadUser(string username,string password)
+        public static User LoadUser(string username, string password)
         {
             if (CheckUserExists(username))
             {
                 FileStream fs = new FileStream(@"data\users\" + username + ".dat", FileMode.Open, FileAccess.Read);
                 BinaryFormatter bf = new BinaryFormatter();
-                Admin tempa = bf.Deserialize(fs) as Admin;
-                fs.Seek(0, SeekOrigin.Begin);
-                Customer tempc = bf.Deserialize(fs) as Customer;
+                User U = bf.Deserialize(fs) as User;
                 fs.Close();
-                if (tempa != null)
-                        if (tempa.Password == password)
-                            return (tempa, null);
-                if (tempc != null)
-                        if (tempc.Password == password)
-                            return (null, tempc);
+                if (U.Password == password)
+                    return U;
             }
-            return (null, null);
+            return null;
         }
-        public static Customer LoadCustomer(string path)
+        public static Customer GetCustomer(string username)
         {
-            try
+            if (CheckUserExists(username))
             {
-                FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read);
+                FileStream fs = new FileStream(@"data\users\" + username + ".dat", FileMode.Open, FileAccess.Read);
                 BinaryFormatter bf = new BinaryFormatter();
-                Admin tempa = bf.Deserialize(fs) as Admin;
-                fs.Seek(0, SeekOrigin.Begin);
-                Customer tempc = bf.Deserialize(fs) as Customer;
+                Customer C = bf.Deserialize(fs) as Customer;
                 fs.Close();
-                if (tempc != null)
-                    return tempc;
-            }
-            catch
-            {
-                return null;
+                if (C != null)
+                    return C;
             }
             return null;
         }
     }
+
 }

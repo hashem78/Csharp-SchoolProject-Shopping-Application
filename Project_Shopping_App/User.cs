@@ -89,8 +89,6 @@ namespace shoppingApp
             catch
             {
                 Console.WriteLine("Wrong choice!");
-                Console.Write("Press any key to continue...");
-                Console.ReadKey();
                 return -1;
             }
         }
@@ -132,12 +130,12 @@ namespace shoppingApp
         {
             if (threshold > 0)
             {
+                Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
                 foreach (Product p in StoreList.List.Values)
                 {
                     if (p.ProductQuantity >= threshold)
                         p.Print();
                 }
-                Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
             }
             else
                 Console.WriteLine("Wrong value entered!");
@@ -145,10 +143,17 @@ namespace shoppingApp
         private void AddCustomer()
         {
             Console.Write("Enter username: ");
-            string uname = Console.ReadLine();
+            string username = Console.ReadLine();
+            if (Login.CheckUserExists(username))
+            { 
+                Console.WriteLine("Customer {0} already exists, would you like to overwrite?(Y/N): ",username);
+                string uchoice = Console.ReadLine().ToUpper();
+                if (uchoice == "N")
+                    return;
+            }
             Console.Write("Enter password: ");
             string password = Console.ReadLine();
-            Customer C = new Customer(uname, password);
+            Customer C = new Customer(username, password);
             C.SaveUser();
         }
         private void DeleteCustomer()
@@ -171,7 +176,7 @@ namespace shoppingApp
                     int uchoice = Convert.ToInt32(Console.ReadLine());
                     if (uchoice >= 1 && uchoice <= dir.Length)
                     {
-                        if(Login.LoadCustomer(dir[uchoice-1]) != null)
+                        if(Login.LoadUser(dir[uchoice-1],Password).GetType() != this.GetType())
                             File.Delete(dir[uchoice - 1]);
                         else
                         {
@@ -193,7 +198,6 @@ namespace shoppingApp
         }
         public void ViewAllUsers()
         {
-            Console.Clear();
             string[] dir = Directory.GetFiles(@"data\users\", "*.dat");
             int idx = 1;
             foreach (string file in dir)
@@ -206,7 +210,6 @@ namespace shoppingApp
         }
         public override void AddProduct()
         {
-            Console.Clear();
             string id;
             Console.Write("Please enter product ID: ");
             id = Console.ReadLine();
@@ -214,7 +217,6 @@ namespace shoppingApp
         }
         private void DeleteProductFromStore()
         {
-            Console.Clear();
             Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
             foreach (Product p in StoreList.List.Values)
                 p.Print();
@@ -255,7 +257,6 @@ namespace shoppingApp
         }
         private void Search()
         {
-            Console.Clear();
             Console.Write("Enter ProductId to look for: ");
             string id = Console.ReadLine();
             if(StoreList.GetProduct(id) !=null)
@@ -270,9 +271,8 @@ namespace shoppingApp
 
         public override void HandleChoice(string choice)
         {
+            Console.Clear();
             int c = isChoiceCorrect(choice);
-            if (c == -1)
-                return;
             switch (c)
             {
                 case 1:
@@ -296,7 +296,6 @@ namespace shoppingApp
                 case 7:
                     try
                     {
-                        Console.Clear();
                         Console.Write("Enter threshold: ");
                         double threshold = Convert.ToDouble(Console.ReadLine());
                         ViewStoreProducts(threshold);
@@ -318,7 +317,6 @@ namespace shoppingApp
         }
         private void ViewAllOrdersBetweenDates()
         {
-            Console.Clear();
             Console.Write("Enter starting date (dd/mm/yy): ");
             string starting = Console.ReadLine();
             Console.Write("Enter ending date (dd/mm/yy): ");
@@ -335,22 +333,18 @@ namespace shoppingApp
             if (!DateTime.TryParseExact(starting, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out startingDate))
             {
                 Console.WriteLine("Wrong starting date value entered!");
-                Console.WriteLine("Press any key to continue...");
-                Console.ReadKey();
                 return;
             }
             if (!DateTime.TryParseExact(ending, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out endingDate))
             {
                 Console.WriteLine("Wrong ending date value entered!");
-                Console.WriteLine("Press any key to continue...");
-                Console.ReadKey();
                 return;
             }
             string[] users = Directory.GetFiles(@"data\users\", "*.dat");
             Console.WriteLine("Order            From                 Date");
             foreach (string s in users)
             {
-                Customer c = Login.LoadCustomer(s) as Customer;
+                Customer c = Login.GetCustomer(s);
                 if (c != null)
                     foreach (Product p in c.Basket.List.Values)
                         if (DateTime.Compare(startingDate, p.TimeOfPurchase) <= 0)
@@ -362,22 +356,15 @@ namespace shoppingApp
         {
             ViewAllUsers();
             Console.Write("Enter customer name: ");
-            string name = Console.ReadLine();
+            string username = Console.ReadLine();
             BinaryFormatter bf = new BinaryFormatter();
-            Customer temp;
-            try
-            {
-                FileStream fs = new FileStream(@"data\users\" + name + ".dat", FileMode.Open, FileAccess.Read);
-                temp = (Customer)bf.Deserialize(fs);
+            Customer temp = Login.GetCustomer(username);
+            if(temp != null)
                 temp.ViewList();
-                fs.Close();
-            }
-            catch (InvalidCastException)
+            else
             {
-                Console.WriteLine("Wrong value entered!");
+                Console.WriteLine("Customer is either an admin, or doesn't exist!");
             }
-            Console.ReadKey();
-            Console.WriteLine("Press any key to continue...");
         }
 
     }
@@ -421,7 +408,6 @@ namespace shoppingApp
 
         public override void AddProduct()
         {
-            Console.Clear();
             Console.WriteLine("Available products");
             StoreList.ViewStoreList(false);
             Console.WriteLine("Products in basket");
@@ -629,9 +615,8 @@ namespace shoppingApp
 
         public override void HandleChoice(string choice)
         {
+            Console.Clear();
             int c = isChoiceCorrect(choice);
-            if (c == -1)
-                return;
             switch (c)
             {
                 case 1:

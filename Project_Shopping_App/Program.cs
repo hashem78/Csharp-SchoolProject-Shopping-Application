@@ -32,20 +32,8 @@ namespace shoppingApp
             string uname = Console.ReadLine();
             Console.Write("Enter password: ");
             string upass = Console.ReadLine();
-            var userC = Login.LoadUser(uname, upass);
-            if (userC.a != null)
-            {
-                Admin adm = userC.a;
-                Menu(adm);
-            }
-            else if (userC.c != null)
-            {
-                Customer customer = userC.c;
-                Menu(customer);
-            }else if (userC.a == null && userC.c == null)
-            {
-                Console.WriteLine("Login failed... Password or username incorrect!");
-            }
+            Menu(Login.LoadUser(uname, upass));
+
         }
     }
 }
