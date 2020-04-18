@@ -150,6 +150,8 @@ namespace shoppingApp
                 string uchoice = Console.ReadLine().ToUpper();
                 if (uchoice == "N")
                     return;
+                if (uchoice != "Y")
+                    Console.WriteLine("Wrong value entered!");
             }
             Console.Write("Enter password: ");
             string password = Console.ReadLine();
