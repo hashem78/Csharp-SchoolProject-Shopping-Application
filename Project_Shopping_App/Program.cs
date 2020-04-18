@@ -19,7 +19,7 @@ namespace shoppingApp
                 Console.Write("Please enter your choice(-1 to exit): ");
                 string uchoice = Console.ReadLine();
                 if (uchoice == "-1")
-                    Environment.Exit(Environment.ExitCode);
+                    return;
                 usr.HandleChoice(uchoice);
             }
         }
@@ -32,7 +32,13 @@ namespace shoppingApp
             string uname = Console.ReadLine();
             Console.Write("Enter password: ");
             string upass = Console.ReadLine();
-            Menu(Login.LoadUser(uname, upass));
+            User user = Login.LoadUser(uname, upass);
+            if (user != null)
+                Menu(user);
+            else
+            {
+                Console.WriteLine("Failed to login, user {0} doesn\'t exist or password entered isn\'t correct!",uname);
+            }
 
         }
     }

@@ -178,7 +178,7 @@ namespace shoppingApp
                     int uchoice = Convert.ToInt32(Console.ReadLine());
                     if (uchoice >= 1 && uchoice <= dir.Length)
                     {
-                        if(Login.LoadUser(dir[uchoice-1],Password).GetType() != this.GetType())
+                        if(Login.GetCustomer(dir[uchoice-1])!=null)
                             File.Delete(dir[uchoice - 1]);
                         else
                         {
@@ -342,27 +342,40 @@ namespace shoppingApp
                 Console.WriteLine("Wrong ending date value entered!");
                 return;
             }
-            string[] users = Directory.GetFiles(@"data\users\", "*.dat");
-            Console.WriteLine("Order            From                 Date");
-            foreach (string s in users)
+            string[] orders = Directory.GetFiles(@"data\orders\", "*.dat");
+            foreach (string order in orders)
             {
-                Customer c = Login.GetCustomer(s);
-                if (c != null)
-                    foreach (Product p in c.Basket.List.Values)
-                        if (DateTime.Compare(startingDate, p.TimeOfPurchase) <= 0)
-                            if (DateTime.Compare(endingDate, p.TimeOfPurchase) >= 0)
-                                p.Print();
+                Order to = Order.GetOrder(order);
+                if (to != null)
+                {
+                    if (DateTime.Compare(startingDate, to.TimeOfPurchase) <= 0)
+                        if (DateTime.Compare(endingDate, to.TimeOfPurchase) >= 0)
+                            to.Print();
+                }
             }
         }
-        private void ViewAllOrdersForCustomer()
+        private void ViewAllOrdersForCustomer(string name = "")
         {
-            ViewAllUsers();
-            Console.Write("Enter customer name: ");
-            string username = Console.ReadLine();
+            string username;
+            if (name == "")
+            {
+                ViewAllUsers();
+                Console.Write("Enter customer name: ");
+                username = Console.ReadLine();
+            }
+            else
+                username = name;
             BinaryFormatter bf = new BinaryFormatter();
-            Customer temp = Login.GetCustomer(username);
-            if(temp != null)
-                temp.ViewList();
+            Customer temp = Login.GetCustomer(@"data\users\"+username+".dat");
+            if (temp != null)
+            {
+                string[] userorders = Directory.GetFiles(@"data\orders\", "#"+username+"*"+".dat");
+                foreach(string userorder in userorders)
+                {
+                    Order to = Order.GetOrder(userorder);
+                    to.Print();
+                }
+            }
             else
             {
                 Console.WriteLine("Customer is either an admin, or doesn't exist!");
@@ -481,6 +494,10 @@ namespace shoppingApp
                 Console.WriteLine("Wrong value entered!");
             }
         }
+        public Basket GetBasket()
+        {
+            return Basket;
+        }
 
         private bool Pay()
         {
@@ -566,7 +583,8 @@ namespace shoppingApp
                         Console.Write("Total cost is {0} and your balance is {1}, would you like to procceed with the transaction?(Y/N): ", cost, _balance);
                         string uchoice = Console.ReadLine().ToUpper();
                         if (uchoice == "Y")
-                        {
+                        {                            
+                            Order order = new Order(this,cost);
                             _balance -= cost;
                             Basket.List.Clear();
                             Console.WriteLine("Deducted {0}, new balance is {1}.", cost, _balance);

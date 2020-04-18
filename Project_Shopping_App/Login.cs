@@ -28,11 +28,11 @@ namespace shoppingApp
             }
             return null;
         }
-        public static Customer GetCustomer(string username)
+        public static Customer GetCustomer(string path)
         {
-            if (CheckUserExists(username))
+            if (File.Exists(path))
             {
-                FileStream fs = new FileStream(@"data\users\" + username + ".dat", FileMode.Open, FileAccess.Read);
+                FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read);
                 BinaryFormatter bf = new BinaryFormatter();
                 Customer C = bf.Deserialize(fs) as Customer;
                 fs.Close();
