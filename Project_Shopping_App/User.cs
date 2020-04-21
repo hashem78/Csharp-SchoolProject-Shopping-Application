@@ -16,7 +16,6 @@ namespace shoppingApp
         private string _name;
         private string _password;
 
-
         public string Name
         {
             set
@@ -103,9 +102,12 @@ namespace shoppingApp
         }
         public virtual void ViewList()
         {
-            Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
-            foreach (Product p in StoreList.List.Values)
-                p.Print();
+            if (!StoreList.isEmpty())
+            {
+                Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
+                foreach (Product p in StoreList.List.Values)
+                    p.Print();
+            }
         }
     }
     [Serializable]
@@ -123,7 +125,8 @@ namespace shoppingApp
             "View all users.",
             "View all products based on threshold.",
             "View all orders for a specific customer.",
-            "View all orders between dates."
+            "View all orders between dates.",
+            "Return to login screen."
             };
         }
         public override void ViewStoreProducts(double threshold)
@@ -145,8 +148,8 @@ namespace shoppingApp
             Console.Write("Enter username: ");
             string username = Console.ReadLine();
             if (Login.CheckUserExists(username))
-            { 
-                Console.WriteLine("Customer {0} already exists, would you like to overwrite?(Y/N): ",username);
+            {
+                Console.WriteLine("Customer {0} already exists, would you like to overwrite?(Y/N): ", username);
                 string uchoice = Console.ReadLine().ToUpper();
                 if (uchoice == "N")
                     return;
@@ -163,40 +166,35 @@ namespace shoppingApp
             string[] dir = Directory.GetFiles(@"data\users\", "*.dat");
             int idx = 1;
 
-            while (true)
+            foreach (string file in dir)
             {
-                foreach (string file in dir)
-                {
-                    int a = file.LastIndexOf('\\') + 1;
-                    string ans = idx + "." + file.Substring(a, file.IndexOf('.') - a);
-                    idx++;
-                    Console.WriteLine(ans);
-                }
-                try
-                {
-                    Console.Write("Enter choice: ");
-                    int uchoice = Convert.ToInt32(Console.ReadLine());
-                    if (uchoice >= 1 && uchoice <= dir.Length)
-                    {
-                        if(Login.GetCustomer(dir[uchoice-1])!=null)
-                            File.Delete(dir[uchoice - 1]);
-                        else
-                        {
-                            Console.WriteLine("User is an admin... can't delete admins!");
-                        }
-                    }
-                    else
-                        throw new FormatException();
-                    break;
-                }
-                catch(FormatException)
-                {
-                    idx = 1;
-                    Console.WriteLine("Wrong selection!");
-                }
-
+                int a = file.LastIndexOf('\\') + 1;
+                string ans = idx + "." + file.Substring(a, file.IndexOf('.') - a);
+                idx++;
+                Console.WriteLine(ans);
             }
-
+            try
+            {
+                Console.Write("Enter choice(1-{0}): ", dir.Length);
+                int uchoice = Convert.ToInt32(Console.ReadLine());
+                if (uchoice >= 1 && uchoice <= dir.Length)
+                {
+                    if (Login.GetCustomer(dir[uchoice - 1]) != null)
+                        File.Delete(dir[uchoice - 1]);
+                    else
+                    {
+                        Console.WriteLine("User is an admin... can't delete admins!");
+                    }
+                }
+                else
+                    throw new FormatException();
+            }
+            catch (FormatException)
+            {
+                idx = 1;
+                Console.WriteLine("Wrong selection!, exiting without making a change");
+                return;
+            }
         }
         public void ViewAllUsers()
         {
@@ -215,7 +213,39 @@ namespace shoppingApp
             string id;
             Console.Write("Please enter product ID: ");
             id = Console.ReadLine();
-            StoreList.AddProduct(id);
+            if (StoreList.GetProduct(id) != null)
+            {
+                Console.Write("Product already exists, would you like to add by a certain quantity?(Y/N): ");
+                string uchoice = Console.ReadLine().ToUpper();
+                try
+                {
+                    if (uchoice == "Y")
+                    {
+                        while (true)
+                        {
+                            Console.Write("Enter quantity to increase by: ");
+                            double quan = Convert.ToDouble(Console.ReadLine());
+                            if (quan < 0)
+                                throw new FormatException();
+                            StoreList.AddProduct(id, quan);
+                            break;
+                        }
+                    }
+                    else if (uchoice != "N")
+                    {
+                        throw new FormatException();
+                    }
+
+                }
+                catch (FormatException)
+                {
+                    Console.WriteLine("Wrong value entered!");
+                }
+            }
+            else
+            {
+                StoreList.AddProduct(id);
+            }
         }
         private void DeleteProductFromStore()
         {
@@ -251,7 +281,8 @@ namespace shoppingApp
                 {
                     Console.WriteLine("Wrong choice!");
                 }
-            }else
+            }
+            else
             {
                 Console.WriteLine("Product does not exist!");
             }
@@ -261,11 +292,12 @@ namespace shoppingApp
         {
             Console.Write("Enter ProductId to look for: ");
             string id = Console.ReadLine();
-            if(StoreList.GetProduct(id) !=null)
+            if (StoreList.GetProduct(id) != null)
             {
                 Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
                 StoreList.GetProduct(id).Print();
-            }else
+            }
+            else
             {
                 Console.WriteLine("Poduct with Id ({0}) does not exist!", id);
             }
@@ -313,6 +345,9 @@ namespace shoppingApp
                 case 9:
                     ViewAllOrdersBetweenDates();
                     break;
+                case 10:
+                    Login.Menu();
+                    return;
             }
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey();
@@ -366,11 +401,11 @@ namespace shoppingApp
             else
                 username = name;
             BinaryFormatter bf = new BinaryFormatter();
-            Customer temp = Login.GetCustomer(@"data\users\"+username+".dat");
+            Customer temp = Login.GetCustomer(@"data\users\" + username + ".dat");
             if (temp != null)
             {
-                string[] userorders = Directory.GetFiles(@"data\orders\", "#"+username+"*"+".dat");
-                foreach(string userorder in userorders)
+                string[] userorders = Directory.GetFiles(@"data\orders\", "#" + username + "*" + ".dat");
+                foreach (string userorder in userorders)
                 {
                     Order to = Order.GetOrder(userorder);
                     to.Print();
@@ -388,13 +423,11 @@ namespace shoppingApp
     {
         private double _balance = 0;
         private string _address;
+        private bool isFirstTime = true;
+
         public Basket Basket = new Basket();
         public string Address
         {
-            set
-            {
-                _address = value;
-            }
             get
             {
                 return _address;
@@ -417,7 +450,8 @@ namespace shoppingApp
             "Search for a product based on Product_Category.",
             "Add product to basket.",
             "Money payment.",
-            "Add cash credit."
+            "Add cash credit.",
+            "Return to login screen."
             };
         }
 
@@ -458,8 +492,26 @@ namespace shoppingApp
         }
         public override void ViewList()
         {
-            Basket.ViewBasket();
-            Console.WriteLine("Current balance is: {0}", _balance);
+            if (isFirstTime)
+            {
+                Console.WriteLine("Since this is your first time logging in as a new Customer you're required to enter a shipping address.");
+                Console.Write("Enter your address: ");
+                _address = Console.ReadLine();
+                isFirstTime = false;
+                Console.WriteLine("Continuing logging in...");
+                Console.Write("Press any key to continue...");
+                Console.ReadKey();
+                Console.Clear();
+                SaveUser();
+            }
+            Console.WriteLine("Welcome {0}".PadLeft(Console.WindowWidth/2), Name);
+            if (!Basket.isEmpty())
+            {
+                Console.WriteLine("Your basket has the following items.");
+                Basket.ViewBasket();
+            }
+            Console.WriteLine("Current balance is: {0:C}", _balance);
+            Console.WriteLine("Current shipping address: {0}", _address);
         }
         public override void ViewStoreProducts(double threshold = 0)
         {
@@ -468,6 +520,11 @@ namespace shoppingApp
         }
         private void Search()
         {
+            if(StoreList.List.Count == 0)
+            {
+                Console.WriteLine("Store is empty, nothing to search for!");
+                return;
+            }
             Dictionary<int, string> categories = new Dictionary<int, string>();
             int idx = 1;
             foreach (Product p in StoreList.List.Values)
@@ -476,11 +533,12 @@ namespace shoppingApp
             foreach (KeyValuePair<int, string> d in categories)
                 Console.WriteLine(d.Key + ". " + d.Value);
 
-            Console.Write("Enter your choice(1-{0}): ", idx - 1);
-
             try
             {
+                Console.Write("Enter your choice(1-{0}): ", categories.Count);
                 int choice = Convert.ToInt32(Console.ReadLine());
+                if (!(choice >= 1 && choice <= categories.Count))
+                    throw new FormatException();
                 Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
                 foreach (Product p in StoreList.List.Values)
                     if (p.ProductCategory == categories[choice])
@@ -491,7 +549,7 @@ namespace shoppingApp
             }
             catch (FormatException)
             {
-                Console.WriteLine("Wrong value entered!");
+                Console.WriteLine("Wrong value entered or category doesn\'t exist!");
             }
         }
         public Basket GetBasket()
@@ -509,7 +567,7 @@ namespace shoppingApp
                 {
                     Console.Clear();
                     Basket.ViewBasket();
-                    Console.WriteLine("Your balance is: {0} ", _balance);
+                    Console.WriteLine("Your balance is: {0:C} ", _balance);
                     //Calculate cost of items in Basket
                     cost = 0;
                     foreach (Product p in Basket.List.Values)
@@ -523,7 +581,7 @@ namespace shoppingApp
                         {
                             Console.Write("Enter id of product to remove/remove from: ");
                             string id = Console.ReadLine();
-                            if(Basket.GetProduct(id) == null)//check if product exists in basket
+                            if (Basket.GetProduct(id) == null)//check if product exists in basket
                             {
                                 Console.WriteLine("Item entered is not in basket!");
                                 Console.Write("Press any key to continue...");
@@ -580,14 +638,14 @@ namespace shoppingApp
                 {
                     while (true)
                     {
-                        Console.Write("Total cost is {0} and your balance is {1}, would you like to procceed with the transaction?(Y/N): ", cost, _balance);
+                        Console.Write("Total cost is {0:C} and your balance is {1:C}, would you like to procceed with the transaction?(Y/N): ", cost, _balance);
                         string uchoice = Console.ReadLine().ToUpper();
                         if (uchoice == "Y")
-                        {                            
-                            Order order = new Order(this,cost);
+                        {
+                            Order order = new Order(this, cost);
                             _balance -= cost;
                             Basket.List.Clear();
-                            Console.WriteLine("Deducted {0}, new balance is {1}.", cost, _balance);
+                            Console.WriteLine("Deducted {0}, new balance is {1:C}.", cost, _balance);
                             SaveUser();
                             break;
                         }
@@ -607,7 +665,6 @@ namespace shoppingApp
             else
             {
                 Console.Clear();
-                Basket.ViewBasket();
                 Console.WriteLine("Your basket is empty, functionality disabled!");
             }
             return false;
@@ -617,14 +674,14 @@ namespace shoppingApp
         {
             try
             {
-                Console.WriteLine("Current balance is: {0}", _balance);
+                Console.WriteLine("Current balance is: {0:C}", _balance);
                 Console.Write("Enter amount to deposit: ");
                 double amount = Convert.ToDouble(Console.ReadLine());
                 if (amount < 0)
                     throw new FormatException();
-                Console.WriteLine("Successfully deposited {0} to your account.", amount);
+                Console.WriteLine("Successfully deposited {0:C} to your account.", amount);
                 _balance += amount;
-                Console.WriteLine("New balance is: {0}", _balance);
+                Console.WriteLine("New balance is: {0:C}", _balance);
                 SaveUser();
             }
             catch (FormatException)
@@ -654,6 +711,9 @@ namespace shoppingApp
                 case 5:
                     AddBalance();
                     break;
+                case 6:
+                    Login.Menu();
+                    return;
             }
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey();

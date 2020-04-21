@@ -106,6 +106,10 @@ namespace shoppingApp
                 _list = new Hashtable();
             }
         }
+        public static bool isEmpty()
+        {
+            return _list.Count == 0;
+        }
         public static void ViewStoreList(bool showZero = true)
         {
             Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
@@ -193,7 +197,7 @@ namespace shoppingApp
                 }
                 if (GetProduct(id).ProductQuantity == 0)
                 {
-                    DeleteProduct(id);
+                    _list.Remove(id);
                     success = true;
                 }
             }
