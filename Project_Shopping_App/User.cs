@@ -104,12 +104,9 @@ namespace shoppingApp
         }
         public virtual void ViewList()
         {
-            if (!StoreList.isEmpty())
-            {
-                Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
-                foreach (Product p in StoreList.List.Values)
-                    p.Print();
-            }
+            Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
+            foreach (Product p in StoreList.List.Values)
+                p.Print();
         }
     }
     [Serializable]
@@ -133,6 +130,11 @@ namespace shoppingApp
         }
         public override void ViewStoreProducts(double threshold)
         {
+            if (StoreList.isEmpty())
+            {
+                Console.WriteLine("Store is empty!");
+                return;
+            }
             if (threshold > 0)
             {
                 Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
@@ -237,7 +239,6 @@ namespace shoppingApp
                     {
                         throw new FormatException();
                     }
-
                 }
                 catch (FormatException)
                 {
@@ -251,9 +252,7 @@ namespace shoppingApp
         }
         private void DeleteProductFromStore()
         {
-            Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
-            foreach (Product p in StoreList.List.Values)
-                p.Print();
+            ViewList();
             Console.Write("Enter ID of product to remove: ");
             string uchoice = Console.ReadLine();
             double quan = 0;
@@ -363,8 +362,12 @@ namespace shoppingApp
 
             if (starting[starting.IndexOf("/") + 1] != '0')
                 starting = starting.Insert(starting.IndexOf("/") + 1, "0");
+            if (starting[0] != '0')
+                starting = starting.Insert(0, "0");
             if (ending[ending.IndexOf("/") + 1] != '0')
                 ending = ending.Insert(ending.IndexOf("/") + 1, "0");
+            if (ending[0] != '0')
+                ending = ending.Insert(0, "0");
 
             DateTime startingDate;
             DateTime endingDate;
@@ -407,11 +410,16 @@ namespace shoppingApp
             if (temp != null)
             {
                 string[] userorders = Directory.GetFiles(@"data\orders\", "#" + username + "*" + ".dat");
-                foreach (string userorder in userorders)
+                if (userorders.Length != 0)
                 {
-                    Order to = Order.GetOrder(userorder);
-                    to.Print();
+                    foreach (string userorder in userorders)
+                    {
+                        Order to = Order.GetOrder(userorder);
+                        to.Print();
+                    }
                 }
+                else
+                    Console.WriteLine("Customer {0} doesn\'nt have any orders!", username);
             }
             else
             {
@@ -451,14 +459,19 @@ namespace shoppingApp
             "View all products.",
             "Search for a product based on Product_Category.",
             "Add product to basket.",
+            "Remove product from basket.",
             "Money payment.",
             "Add cash credit.",
             "Return to login screen."
             };
         }
-
         public override void AddProduct()
         {
+            if (StoreList.isEmpty())
+            {
+                Console.WriteLine("Store is empty!");
+                return;
+            }
             Console.WriteLine("Available products");
             StoreList.ViewStoreList(false);
             Console.WriteLine("Products in basket");
@@ -468,6 +481,8 @@ namespace shoppingApp
             try
             {
                 Product temp = StoreList.GetProduct(tempID).Clone();
+                if (temp.ProductQuantity == 0)
+                    throw new NullReferenceException();
                 Console.Write("Enter quantity: ");
                 double uquan = Convert.ToDouble(Console.ReadLine());
                 if (uquan < 0)
@@ -475,6 +490,7 @@ namespace shoppingApp
                 if (temp.ProductQuantity - uquan >= 0)
                 {
                     temp.ProductQuantity = uquan;
+                    StoreList.GetProduct(tempID).ProductQuantity -= uquan;
                     Basket.Add(temp, uquan);
                     SaveUser();
                 }
@@ -516,12 +532,19 @@ namespace shoppingApp
         }
         public override void ViewStoreProducts(double threshold = 0)
         {
-            if (threshold >= 0)
-                StoreList.ViewStoreList(false);
+            if (!StoreList.isEmpty())
+            {
+                if (threshold >= 0)
+                    StoreList.ViewStoreList(false);
+            }
+            else
+            {
+                Console.WriteLine("Store is empty!");
+            }
         }
         private void Search()
         {
-            if(StoreList.List.Count == 0)
+            if (StoreList.isEmpty())
             {
                 Console.WriteLine("Store is empty, nothing to search for!");
                 return;
@@ -529,8 +552,13 @@ namespace shoppingApp
             Dictionary<int, string> categories = new Dictionary<int, string>();
             int idx = 1;
             foreach (Product p in StoreList.List.Values)
-                if (!categories.ContainsValue(p.ProductCategory))
+                if (!categories.ContainsValue(p.ProductCategory) && p.ProductQuantity > 0)
                     categories.Add(idx++, p.ProductCategory);
+            if(categories.Count == 0)
+            {
+                Console.WriteLine("Store is empty, nothing to search for!");
+                return;
+            }
             foreach (KeyValuePair<int, string> d in categories)
                 Console.WriteLine(d.Key + ". " + d.Value);
 
@@ -542,7 +570,7 @@ namespace shoppingApp
                     throw new FormatException();
                 Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
                 foreach (Product p in StoreList.List.Values)
-                    if (p.ProductCategory == categories[choice])
+                    if (p.ProductCategory == categories[choice] && p.ProductQuantity > 0)
                     {
                         p.Print();
                     }
@@ -580,41 +608,7 @@ namespace shoppingApp
                         string s = Console.ReadLine().ToUpper();
                         if (s == "Y")
                         {
-                            Console.Write("Enter id of product to remove/remove from: ");
-                            string id = Console.ReadLine();
-                            if (Basket.GetProduct(id) == null)//check if product exists in basket
-                            {
-                                Console.WriteLine("Item entered is not in basket!");
-                                Console.Write("Press any key to continue...");
-                                Console.ReadKey();
-                                continue;
-                            }
-                            try
-                            {
-                                Console.Write("Enter quantity to remove: ");
-                                double quan = Convert.ToDouble(Console.ReadLine());
-                                if (quan < 0)
-                                    throw new FormatException();
-                                if (quan != 0)//dont delete if quantity is 0
-                                {
-                                    if (Basket.DeleteProduct(id, quan))
-                                    {
-                                        StoreList.AddProduct(id, quan);
-                                        if (Basket.isEmpty())
-                                        {
-                                            success = false;
-                                            break;
-                                        }
-                                    }
-                                    else throw new FormatException();
-                                }
-                            }
-                            catch (FormatException)
-                            {
-                                Console.WriteLine("Wrong value entered!");
-                                Console.Write("Press any key to continue...");
-                                Console.ReadKey();
-                            }
+                            success = RemoveProduct();
                         }
                         else if (s == "N")
                         {
@@ -634,7 +628,7 @@ namespace shoppingApp
                         break;
                     }
                 }
-                SaveUser();
+              
                 if (success)
                 {
                     while (true)
@@ -690,7 +684,50 @@ namespace shoppingApp
                 Console.Write("Wrong value entered!");
             }
         }
-
+        private bool RemoveProduct()
+        {
+            if (Basket.isEmpty())
+            {
+                Console.WriteLine("Basktet is empty, functionality disabled!");
+                return false;
+            }
+            Console.Write("Enter id of product to remove/remove from: ");
+            string id = Console.ReadLine();
+            if (Basket.GetProduct(id) == null)//check if product exists in basket
+            {
+                Console.WriteLine("Item entered is not in basket!");
+                Console.Write("Press any key to continue...");
+                Console.ReadKey();
+                return false;
+            }
+            try
+            {
+                Console.Write("Enter quantity to remove: ");
+                double quan = Convert.ToDouble(Console.ReadLine());
+                if (quan < 0)
+                    throw new FormatException();
+                if (quan != 0)//dont delete if quantity is 0
+                {
+                    if (Basket.DeleteProduct(id, quan))
+                    {
+                        StoreList.AddProduct(id, quan);
+                        SaveUser();
+                        if (Basket.isEmpty())
+                        {
+                            return false; 
+                        }
+                    }
+                    else throw new FormatException();
+                }
+            }
+            catch (FormatException)
+            {
+                Console.WriteLine("Wrong value entered!");
+                Console.Write("Press any key to continue...");
+                Console.ReadKey();
+            }
+            return true;
+        }
         public override void HandleChoice(string choice)
         {
             Console.Clear();
@@ -707,12 +744,16 @@ namespace shoppingApp
                     AddProduct();
                     break;
                 case 4:
-                    Pay();
+                    Basket.ViewBasket();
+                    RemoveProduct();
                     break;
                 case 5:
-                    AddBalance();
+                    Pay();
                     break;
                 case 6:
+                    AddBalance();
+                    break;
+                case 7:
                     Login.Menu();
                     return;
             }

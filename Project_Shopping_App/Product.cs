@@ -109,12 +109,16 @@ namespace shoppingApp
             }
         }
         public static bool isEmpty()
-        {
-            return _list.Count == 0;
+        {           
+            foreach(Product P in _list.Values)
+                if (P.ProductQuantity != 0)
+                    return false;
+            return true;
         }
         public static void ViewStoreList(bool showZero = true)
         {
             Console.WriteLine("{0,-25} {1,-25} {2,-25} {3,-10} {4,-10}", "ID", "Name", "Category", "Price", "Quantity");
+            
             foreach (Product p in _list.Values)
                 if (p.ProductQuantity == 0)
                 {
@@ -251,7 +255,7 @@ namespace shoppingApp
             try
             {
                 _list.Add(P.ProductId, P);
-                StoreList.GetProduct(P.ProductId).ProductQuantity -= quantity;
+                //StoreList.GetProduct(P.ProductId).ProductQuantity -= quantity;
                 StoreList.SaveStoreList();
             }
             catch (ArgumentException)
@@ -274,9 +278,15 @@ namespace shoppingApp
                 else
                 {
                     if (GetProduct(id).ProductQuantity - quantity > 0)
+                    {
                         GetProduct(id).ProductQuantity -= quantity;
+                        StoreList.GetProduct(id).ProductQuantity += quantity;
+                    }
                     else if (GetProduct(id).ProductQuantity - quantity == 0)
+                    {
+                        StoreList.GetProduct(id).ProductQuantity += quantity;
                         DeleteProduct(id);
+                    }
                     else
                         return false;
                     return true;

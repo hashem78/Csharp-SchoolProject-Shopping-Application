@@ -31,6 +31,7 @@ namespace shoppingApp
             Console.WriteLine("Order date {0}, with a total of {1}", TimeOfPurchase.ToShortDateString(), Cost);
             Customer.ViewList();
             Console.WriteLine();
+            Console.WriteLine("More Details");
             foreach (Product p in Customer.Basket.List.Values)
             {
                 Console.WriteLine("Ordered {0} of ID {1} on {2}", p.ProductQuantity, p.ProductId, p.TimeOfPurchase.ToShortDateString());

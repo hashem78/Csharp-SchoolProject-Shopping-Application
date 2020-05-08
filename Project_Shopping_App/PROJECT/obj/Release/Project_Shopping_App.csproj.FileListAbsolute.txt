@@ -1,6 +1,0 @@
-C:\Users\Mythi\Desktop\C#ShoppingAPp\Project_Shopping_App\bin\Release\Project_Shopping_App.exe.config
-C:\Users\Mythi\Desktop\C#ShoppingAPp\Project_Shopping_App\bin\Release\Project_Shopping_App.exe
-C:\Users\Mythi\Desktop\C#ShoppingAPp\Project_Shopping_App\bin\Release\Project_Shopping_App.pdb
-C:\Users\Mythi\Desktop\C#ShoppingAPp\Project_Shopping_App\obj\Release\Project_Shopping_App.csprojAssemblyReference.cache
-C:\Users\Mythi\Desktop\C#ShoppingAPp\Project_Shopping_App\obj\Release\Project_Shopping_App.exe
-C:\Users\Mythi\Desktop\C#ShoppingAPp\Project_Shopping_App\obj\Release\Project_Shopping_App.pdb
