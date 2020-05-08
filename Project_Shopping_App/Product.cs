@@ -284,7 +284,7 @@ namespace shoppingApp
                     }
                     else if (GetProduct(id).ProductQuantity - quantity == 0)
                     {
-                        StoreList.GetProduct(id).ProductQuantity += quantity;
+                        //StoreList.GetProduct(id).ProductQuantity += quantity;
                         DeleteProduct(id);
                     }
                     else

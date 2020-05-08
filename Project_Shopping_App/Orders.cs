@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
+using System.Globalization;
 
 // Everything in this file is supposed to be written by Hashem
 
@@ -40,7 +41,7 @@ namespace shoppingApp
         }
         private void GenerateOrderId()
         {
-            OrderId = ("#"+ Customer.Name + TimeOfPurchase.ToShortDateString()).Replace('/','0');
+            OrderId = ("#"+ Customer.Name + TimeOfPurchase.ToString("s", DateTimeFormatInfo.InvariantInfo)).Replace(':','x');
         }
         private void SaveOrder()
         {
